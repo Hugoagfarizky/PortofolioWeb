@@ -100,7 +100,7 @@ export const PROJECTS: ProjectItem[] = [
     ],
     wireframeSpec: {
       gridColumns: '12 Kolom Modular · Gap 24px',
-      typographyScale: 'Bricolage Grotesque 36px / JetBrains Mono 14px',
+      typographyScale: 'Outfit Bold 36px / IBM Plex Mono 14px',
       motionCurve: 'cubic-bezier(0.16, 1, 0.3, 1) · 180ms',
       beforeCaption: 'Wireframe struktural awal: pemetaan hierarki 3-zona dan kepadatan data aset sebelum penerapan permukaan optik.',
       afterCaption: 'Eksekusi produksi akhir: keseimbangan kontras WCAG AAA, grafik vektor bernapas, dan navigasi kontekstual.',
@@ -182,7 +182,7 @@ export const PROJECTS: ProjectItem[] = [
     ],
     wireframeSpec: {
       gridColumns: 'Isometrik 35.264° · Kamera Orthographic',
-      typographyScale: 'Bricolage Grotesque 44px / Mono 12px',
+      typographyScale: 'Outfit ExtraBold 44px / IBM Plex Mono 12px',
       motionCurve: 'Spring Physics (stiffness: 140, damping: 22)',
       beforeCaption: 'Jaring poligon wireframe 3D dan vektor lintasan orbit cincin sebelum proses rendering optik.',
       afterCaption: 'Render akhir dengan pembiasan kaca buram, dispersi cahaya tepi, dan bayangan kaustik.',
@@ -346,7 +346,7 @@ export const PROJECTS: ProjectItem[] = [
     ],
     wireframeSpec: {
       gridColumns: 'Grid Modular 16-Sel · Proporsi DIN A0',
-      typographyScale: 'Bricolage Grotesque 88pt · Subhead 18pt',
+      typographyScale: 'Syne Bold 88pt · Subhead DM Sans 18pt',
       motionCurve: 'Harmonic Oscillation 240ms',
       beforeCaption: 'Sumbu pembagian proporsi matematis dan jangkar tipografi sebelum komposisi kontras.',
       afterCaption: 'Eksekusi poster cetak dan monograf pameran dengan kontras editorial tajam.',

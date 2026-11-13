@@ -31,6 +31,7 @@ export default function App() {
   const [referencedProject, setReferencedProject] =
     useState<ProjectItem | null>(null);
   const [failedImages, setFailedImages] = useState<Record<string, boolean>>({});
+  const [fontPairing, setFontPairing] = useState<'geometric' | 'avant' | 'monograph'>('geometric');
 
   // Smooth scroll progress bar at top of viewport
   const { scrollYProgress } = useScroll();
@@ -103,8 +104,15 @@ export default function App() {
     }
   };
 
+  const fontThemeClass =
+    fontPairing === 'avant'
+      ? 'font-theme-avant'
+      : fontPairing === 'monograph'
+      ? 'font-theme-monograph'
+      : '';
+
   return (
-    <div className="min-h-screen bg-[#F8F7F4] text-[#0A0A0C] relative">
+    <div className={`min-h-screen bg-[#F8F7F4] text-[#0A0A0C] relative ${fontThemeClass}`}>
       {/* Scroll Progress Hairline Indicator */}
       <motion.div
         style={{ scaleX }}
@@ -209,6 +217,52 @@ export default function App() {
                     , serta interaksi berbasis scroll yang halus untuk merek dan
                     produk digital ambisius.
                   </p>
+
+                  {/* Interactive Typography Pairing Selector */}
+                  <div className="mt-6 flex flex-wrap items-center gap-2.5">
+                    <span className="text-xs font-medium text-[#52525B]">
+                      Karakter Tipografi:
+                    </span>
+                    <div
+                      role="group"
+                      aria-label="Pilih pasangan tipografi portofolio"
+                      className="frosted-crystal p-1 rounded-xl inline-flex flex-wrap items-center gap-1"
+                    >
+                      <button
+                        type="button"
+                        onClick={() => setFontPairing('geometric')}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
+                          fontPairing === 'geometric'
+                            ? 'bg-[#0A0A0C] text-white shadow-sm'
+                            : 'text-[#52525B] hover:text-[#0A0A0C]'
+                        }`}
+                      >
+                        Outfit + Playfair
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setFontPairing('avant')}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
+                          fontPairing === 'avant'
+                            ? 'bg-[#0A0A0C] text-white shadow-sm'
+                            : 'text-[#52525B] hover:text-[#0A0A0C]'
+                        }`}
+                      >
+                        Syne Avant-Garde
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setFontPairing('monograph')}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
+                          fontPairing === 'monograph'
+                            ? 'bg-[#0A0A0C] text-white shadow-sm'
+                            : 'text-[#52525B] hover:text-[#0A0A0C]'
+                        }`}
+                      >
+                        Playfair Monograph
+                      </button>
+                    </div>
+                  </div>
                 </div>
 
                 {/* CTA Row & Discipline Index Preview */}
