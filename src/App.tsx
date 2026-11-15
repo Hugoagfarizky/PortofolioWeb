@@ -13,6 +13,7 @@ import {
   Presentation,
   Volume2,
   VolumeX,
+  Columns3,
 } from 'lucide-react';
 import {
   PORTFOLIO_CATEGORIES,
@@ -23,6 +24,8 @@ import {
 import { KineticStage } from './components/KineticStage';
 import { BeforeAfterInspector } from './components/BeforeAfterInspector';
 import { AtelierLab } from './components/AtelierLab';
+import { KineticPosterStudio } from './components/KineticPosterStudio';
+import { ProcessTimeline } from './components/ProcessTimeline';
 import { RecognitionArchive } from './components/RecognitionArchive';
 import { CaseStudyModal } from './components/CaseStudyModal';
 import { ScopeEstimator } from './components/ScopeEstimator';
@@ -62,6 +65,7 @@ export default function App() {
     useState<boolean>(false);
   const [isPitchModeOpen, setIsPitchModeOpen] = useState<boolean>(false);
   const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
+  const [showGridOverlay, setShowGridOverlay] = useState<boolean>(false);
 
   // Sync shortlist to localStorage
   useEffect(() => {
@@ -75,13 +79,25 @@ export default function App() {
     }
   }, [shortlistedIds]);
 
-  // Global Cmd/Ctrl + K shortcut for Command Palette
+  // Global Cmd/Ctrl + K shortcut for Command Palette & G for Swiss Grid Overlay
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
         soundEngine.playTick(1.1);
         setIsCommandPaletteOpen((prev) => !prev);
+        return;
+      }
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (
+        tag !== 'INPUT' &&
+        tag !== 'TEXTAREA' &&
+        !e.metaKey &&
+        !e.ctrlKey &&
+        e.key.toLowerCase() === 'g'
+      ) {
+        soundEngine.playTick();
+        setShowGridOverlay((prev) => !prev);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -200,6 +216,30 @@ export default function App() {
         className="fixed top-0 left-0 right-0 h-[2px] bg-[#1D4ED8] origin-left z-50 pointer-events-none"
       />
 
+      {/* Live 12-Column Swiss Architectural Grid Inspector Overlay */}
+      {showGridOverlay && (
+        <div
+          aria-hidden="true"
+          className="fixed inset-0 z-40 pointer-events-none max-w-[1280px] mx-auto px-6 md:px-10"
+        >
+          <div className="w-full h-full grid grid-cols-4 md:grid-cols-12 gap-6">
+            {[...Array(12)].map((_, idx) => (
+              <div
+                key={idx}
+                className="h-full bg-[#1D4ED8]/[0.04] border-x border-[#1D4ED8]/20 flex flex-col justify-between py-20 px-1"
+              >
+                <span className="font-mono-num text-[9px] text-[#1D4ED8] font-semibold">
+                  C{idx + 1 < 10 ? `0${idx + 1}` : idx + 1}
+                </span>
+                <span className="font-mono-num text-[9px] text-[#1D4ED8]/70">
+                  24px
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Top Navigation Bar — Strict 3-Zone Contract */}
       <header className="sticky top-0 z-40 frosted-crystal border-b border-[#0A0A0C]/8">
         <div className="max-w-[1280px] mx-auto px-6 md:px-10 h-16 flex items-center justify-between gap-8">
@@ -306,6 +346,25 @@ export default function App() {
                     <VolumeX className="w-3.5 h-3.5 text-[#52525B]" />
                   )}
                   <span>Audio Taktil: {soundEnabled ? 'Aktif' : 'Mati'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    soundEngine.playTick();
+                    setShowGridOverlay((v) => !v);
+                  }}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-medium flex items-center gap-2 transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
+                    showGridOverlay
+                      ? 'bg-[#1D4ED8] text-white shadow-sm'
+                      : 'frosted-crystal text-[#0A0A0C] hover:bg-[#0A0A0C] hover:text-white'
+                  }`}
+                >
+                  <Columns3 className="w-3.5 h-3.5" />
+                  <span>Grid Swiss 12-Col</span>
+                  <span className="font-mono-num text-[10px] opacity-75">
+                    [G]
+                  </span>
                 </button>
               </div>
 
@@ -892,7 +951,10 @@ export default function App() {
         {/* SECTION 03: ATELIER DESIGN SYSTEM & MOTION PHYSICS LAB */}
         <AtelierLab />
 
-        {/* SECTION 04: STUDIO PHILOSOPHY & ATTRIBUTABLE CLIENT PROOF */}
+        {/* SECTION 04: INTERACTIVE KINETIC POSTER & VARIABLE TYPE STUDIO */}
+        <KineticPosterStudio />
+
+        {/* SECTION 05: STUDIO PHILOSOPHY, 4-PHASE METHODOLOGY & CLIENT PROOF */}
         <section
           id="filosofi"
           className="py-20 md:py-28 border-t border-[#0A0A0C]/10"
@@ -904,7 +966,7 @@ export default function App() {
               <div className="lg:col-span-5">
                 <div className="flex items-center gap-2 text-xs text-[#52525B] mb-3">
                   <span className="font-mono-num text-[#0A0A0C] font-semibold">
-                    04. Filosofi & Prinsip Kerja
+                    05. Filosofi & Prinsip Kerja
                   </span>
                   <span aria-hidden="true">·</span>
                   <span>Disiplin Anti-Ornamen</span>
@@ -1001,6 +1063,9 @@ export default function App() {
                 </blockquote>
               </div>
             </div>
+
+            {/* Interactive 4-Phase Process & Engineering Standards Timeline */}
+            <ProcessTimeline />
           </div>
         </section>
 
