@@ -476,3 +476,127 @@ export const SERVICE_OPTIONS: DisciplineServiceOption[] = [
     deliverableSummary: 'Desain kemasan, sistem poster pameran, & materi kolateral cetak premium',
   },
 ];
+
+export interface AwardItem {
+  id: string;
+  year: string;
+  organization: string;
+  awardTitle: string;
+  projectTitle: string;
+  projectId: string;
+  disciplineGroup: 'Digital & UI/UX' | 'Brand & Kemasan' | 'Motion & 3D' | 'Editorial';
+  location: string;
+}
+
+export const AWARDS_ARCHIVE: AwardItem[] = [
+  {
+    id: 'awd-01',
+    year: '2026',
+    organization: 'Awwwards',
+    awardTitle: 'Site of the Month & Developer Award',
+    projectTitle: 'Nova Private Wealth OS',
+    projectId: 'nova-private-banking',
+    disciplineGroup: 'Digital & UI/UX',
+    location: 'Amsterdam',
+  },
+  {
+    id: 'awd-02',
+    year: '2026',
+    organization: 'FWA (Favourite Website Awards)',
+    awardTitle: 'FWA of the Day — Kinetic Scroll Choreography',
+    projectTitle: 'Kronos — Kinetic Optics Showreel',
+    projectId: 'kronos-optical-sculpture',
+    disciplineGroup: 'Motion & 3D',
+    location: 'London',
+  },
+  {
+    id: 'awd-03',
+    year: '2026',
+    organization: 'D&AD Pencils',
+    awardTitle: 'Graphite Pencil in Luxury Packaging & Tactile Craft',
+    projectTitle: 'Aethel — Edition One Voyage',
+    projectId: 'aethel-botanical-parfum',
+    disciplineGroup: 'Brand & Kemasan',
+    location: 'London',
+  },
+  {
+    id: 'awd-04',
+    year: '2026',
+    organization: 'Red Dot Award: Communication Design',
+    awardTitle: 'Best of the Best — Spatial Web Archive',
+    projectTitle: 'Brutal Forms — Digital Archive',
+    projectId: 'brutal-forms-web-exhibition',
+    disciplineGroup: 'Digital & UI/UX',
+    location: 'Berlin',
+  },
+  {
+    id: 'awd-05',
+    year: '2025',
+    organization: 'Stiftung Buchkunst Leipzig',
+    awardTitle: 'Best Book Design from All Over the World',
+    projectTitle: 'La Forme Brute — Arsitektur & Cahaya',
+    projectId: 'forme-brute-monograph',
+    disciplineGroup: 'Editorial',
+    location: 'Leipzig',
+  },
+  {
+    id: 'awd-06',
+    year: '2025',
+    organization: 'Type Directors Club (TDC 71)',
+    awardTitle: 'Certificate of Typographic Excellence',
+    projectTitle: 'Kinetika — Biennal Desain Grafis',
+    projectId: 'kinetika-typographic-posters',
+    disciplineGroup: 'Editorial',
+    location: 'New York',
+  },
+  {
+    id: 'awd-07',
+    year: '2026',
+    organization: 'Good Design Award Japan (G-Mark)',
+    awardTitle: 'Digital Material Visualization & Look-Dev',
+    projectTitle: 'Solaris — Glass & Alloy Specimen',
+    projectId: 'solaris-3d-material-lab',
+    disciplineGroup: 'Motion & 3D',
+    location: 'Tokyo',
+  },
+];
+
+export interface EditorialPublication {
+  id: string;
+  publication: string;
+  issueNumber: string;
+  articleTitle: string;
+  quote: string;
+  year: string;
+}
+
+export const EDITORIAL_PUBLICATIONS: EditorialPublication[] = [
+  {
+    id: 'pub-01',
+    publication: 'It’s Nice That',
+    issueNumber: 'Digital Craft Issue #48',
+    articleTitle: 'Mengapa Antarmuka Kaca Optik Kembali Mendefinisikan Produk Finansial Modern',
+    quote:
+      'Atelier Kinetik membuktikan bahwa ketenangan visual dan tipografi numerik yang disiplin mampu memangkas friksi transaksi secara dramatis.',
+    year: '2026',
+  },
+  {
+    id: 'pub-02',
+    publication: 'Slanted Magazine',
+    issueNumber: 'Swiss & Contemporary Typography #43',
+    articleTitle: 'Arsitektur Grid sebagai Bahasa Gerak di Web Kontemporer',
+    quote:
+      'Perpaduan langka antara ketegasan monograf cetak Swiss dan koreografi pegas 60fps yang terasa organik di bawah ujung jari.',
+    year: '2025',
+  },
+  {
+    id: 'pub-03',
+    publication: 'Brand New (UnderConsideration)',
+    issueNumber: 'Reviewed — Luxury Identity',
+    articleTitle: 'Tanpa Tinta Emas: Keberanian Relief Kertas Buta pada Identitas Maison Aethel',
+    quote:
+      'Sebuah studi kasus brilian tentang bagaimana tekstur fisik dan bayangan alami dapat berbicara lebih lantang daripada ornamen berlebihan.',
+    year: '2026',
+  },
+];
+

@@ -6,11 +6,12 @@ import {
   ArrowRight,
   Check,
   Copy,
-  Sparkles,
   Layers,
   ArrowUpRight,
+  Bookmark,
 } from 'lucide-react';
 import { ProjectItem } from '../data/portfolioData';
+import { soundEngine } from '../utils/soundEngine';
 
 interface CaseStudyModalProps {
   project: ProjectItem | null;
@@ -18,6 +19,8 @@ interface CaseStudyModalProps {
   onSelectProject: (project: ProjectItem) => void;
   allProjects: ProjectItem[];
   onUseProjectAsReference: (project: ProjectItem) => void;
+  shortlistedIds: string[];
+  onToggleShortlist: (projectId: string) => void;
 }
 
 export const CaseStudyModal: React.FC<CaseStudyModalProps> = ({
@@ -26,6 +29,8 @@ export const CaseStudyModal: React.FC<CaseStudyModalProps> = ({
   onSelectProject,
   allProjects,
   onUseProjectAsReference,
+  shortlistedIds,
+  onToggleShortlist,
 }) => {
   const [copiedHex, setCopiedHex] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'final' | 'architecture'>('final');
@@ -51,9 +56,11 @@ export const CaseStudyModal: React.FC<CaseStudyModalProps> = ({
   const prevProject =
     allProjects[(currentIndex - 1 + allProjects.length) % allProjects.length];
   const nextProject = allProjects[(currentIndex + 1) % allProjects.length];
+  const isShortlisted = shortlistedIds.includes(project.id);
 
   const handleCopyHex = (hex: string) => {
     navigator.clipboard?.writeText(hex);
+    soundEngine.playChime();
     setCopiedHex(hex);
     setTimeout(() => setCopiedHex(null), 1600);
   };
@@ -102,14 +109,32 @@ export const CaseStudyModal: React.FC<CaseStudyModalProps> = ({
               <span className="font-mono-num">{project.year}</span>
             </div>
 
-            <button
-              type="button"
-              onClick={onClose}
-              aria-label="Tutup panel studi kasus"
-              className="w-10 h-10 rounded-xl bg-[#0A0A0C] text-white hover:bg-[#1D4ED8] transition-colors flex items-center justify-center shrink-0 cursor-pointer"
-            >
-              <X className="w-4 h-4" />
-            </button>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={() => {
+                  soundEngine.playChime();
+                  onToggleShortlist(project.id);
+                }}
+                className={`px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer ${
+                  isShortlisted
+                    ? 'bg-[#1D4ED8] text-white'
+                    : 'frosted-crystal-subtle text-[#0A0A0C] hover:bg-white'
+                }`}
+              >
+                <Bookmark className="w-3.5 h-3.5" />
+                <span>{isShortlisted ? 'Di Shortlist' : 'Simpan Shortlist'}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={onClose}
+                aria-label="Tutup panel studi kasus"
+                className="w-10 h-10 rounded-xl bg-[#0A0A0C] text-white hover:bg-[#1D4ED8] transition-colors flex items-center justify-center shrink-0 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
           </div>
 
           {/* Title & Lead Metadata */}
@@ -151,7 +176,10 @@ export const CaseStudyModal: React.FC<CaseStudyModalProps> = ({
               <div className="frosted-crystal-subtle p-1 rounded-xl flex items-center gap-1">
                 <button
                   type="button"
-                  onClick={() => setViewMode('final')}
+                  onClick={() => {
+                    soundEngine.playTick();
+                    setViewMode('final');
+                  }}
                   className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
                     viewMode === 'final'
                       ? 'bg-[#0A0A0C] text-white'
@@ -162,7 +190,10 @@ export const CaseStudyModal: React.FC<CaseStudyModalProps> = ({
                 </button>
                 <button
                   type="button"
-                  onClick={() => setViewMode('architecture')}
+                  onClick={() => {
+                    soundEngine.playTick();
+                    setViewMode('architecture');
+                  }}
                   className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
                     viewMode === 'architecture'
                       ? 'bg-[#0A0A0C] text-white'
@@ -282,7 +313,6 @@ export const CaseStudyModal: React.FC<CaseStudyModalProps> = ({
 
           {/* Deliverables & Color System Row */}
           <div className="mt-8 pt-6 border-t border-[#0A0A0C]/10 grid grid-cols-1 lg:grid-cols-12 gap-8">
-            {/* Deliverables */}
             <div className="lg:col-span-6">
               <h3 className="text-xs font-semibold text-[#0A0A0C] mb-3">
                 Ruang Lingkup & Deliverables Utama
@@ -300,7 +330,6 @@ export const CaseStudyModal: React.FC<CaseStudyModalProps> = ({
               </div>
             </div>
 
-            {/* Interactive Color Tokens */}
             <div className="lg:col-span-6">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-xs font-semibold text-[#0A0A0C]">
@@ -347,7 +376,10 @@ export const CaseStudyModal: React.FC<CaseStudyModalProps> = ({
             <div className="flex items-center gap-2">
               <button
                 type="button"
-                onClick={() => onSelectProject(prevProject)}
+                onClick={() => {
+                  soundEngine.playTick(0.9);
+                  onSelectProject(prevProject);
+                }}
                 className="px-3.5 py-2 rounded-xl frosted-crystal-subtle hover:bg-white text-xs font-medium text-[#0A0A0C] flex items-center gap-2 transition-colors cursor-pointer whitespace-nowrap shrink-0"
               >
                 <ArrowLeft className="w-3.5 h-3.5" />
@@ -355,7 +387,10 @@ export const CaseStudyModal: React.FC<CaseStudyModalProps> = ({
               </button>
               <button
                 type="button"
-                onClick={() => onSelectProject(nextProject)}
+                onClick={() => {
+                  soundEngine.playTick(1.1);
+                  onSelectProject(nextProject);
+                }}
                 className="px-3.5 py-2 rounded-xl frosted-crystal-subtle hover:bg-white text-xs font-medium text-[#0A0A0C] flex items-center gap-2 transition-colors cursor-pointer whitespace-nowrap shrink-0"
               >
                 <span>Berikutnya ({nextProject.index})</span>
@@ -366,6 +401,7 @@ export const CaseStudyModal: React.FC<CaseStudyModalProps> = ({
             <button
               type="button"
               onClick={() => {
+                soundEngine.playChime();
                 onUseProjectAsReference(project);
                 onClose();
               }}

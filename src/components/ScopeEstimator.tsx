@@ -3,20 +3,24 @@ import { motion } from 'motion/react';
 import {
   Check,
   Send,
-  Calendar,
-  Sparkles,
   RotateCcw,
   CheckCircle2,
+  Download,
+  Bookmark,
+  X,
 } from 'lucide-react';
 import {
   SERVICE_OPTIONS,
   ProjectCategory,
   ProjectItem,
 } from '../data/portfolioData';
+import { soundEngine } from '../utils/soundEngine';
 
 interface ScopeEstimatorProps {
   referencedProject: ProjectItem | null;
   onClearReference: () => void;
+  shortlistedProjects: ProjectItem[];
+  onRemoveShortlisted: (projectId: string) => void;
 }
 
 interface SavedInquiry {
@@ -31,6 +35,7 @@ interface SavedInquiry {
   estimatedBudgetIDR: number;
   notes: string;
   referencedProjectTitle?: string;
+  shortlistedTitles: string[];
   submittedAt: string;
 }
 
@@ -39,6 +44,8 @@ const STORAGE_KEY = 'atelier_kinetik_inquiries_v1';
 export const ScopeEstimator: React.FC<ScopeEstimatorProps> = ({
   referencedProject,
   onClearReference,
+  shortlistedProjects,
+  onRemoveShortlisted,
 }) => {
   const [selectedServices, setSelectedServices] = useState<
     Exclude<ProjectCategory, 'Semua'>[]
@@ -76,6 +83,7 @@ export const ScopeEstimator: React.FC<ScopeEstimatorProps> = ({
   }, [referencedProject]);
 
   const toggleService = (serviceId: Exclude<ProjectCategory, 'Semua'>) => {
+    soundEngine.playTick();
     setSelectedServices((prev) => {
       if (prev.includes(serviceId)) {
         if (prev.length === 1) return prev; // Keep at least 1 active
@@ -108,6 +116,71 @@ export const ScopeEstimator: React.FC<ScopeEstimatorProps> = ({
     rawBudget * complexityMultiplier * timelineMultiplier
   );
 
+  // Export Project Brief & Shortlist Summary as downloadable .TXT specification
+  const handleDownloadBriefDocument = () => {
+    soundEngine.playChime();
+    const dateStr = new Date().toLocaleDateString('id-ID', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
+
+    const shortlistLines =
+      shortlistedProjects.length > 0
+        ? shortlistedProjects
+            .map(
+              (p, i) =>
+                `  ${i + 1}. [${p.index}] ${p.title} (${p.category} · ${p.client} · ${p.year})`
+            )
+            .join('\n')
+        : '  - Belum ada proyek spesifik yang ditandai ke dalam Shortlist.';
+
+    const deliverableLines = selectedObjects
+      .map((s) => `  • ${s.label}: ${s.deliverableSummary}`)
+      .join('\n');
+
+    const content = `====================================================================
+ATELIER KINETIK — RINGKASAN SPESIFIKASI SCOPE & SHORTLIST PROYEK
+Tanggal Dokumen : ${dateStr}
+====================================================================
+
+1. IDENTITAS KLIEN / PENGIRIM
+   Nama        : ${name.trim() || '(Belum diisi)'}
+   Email       : ${email.trim() || '(Belum diisi)'}
+   Organisasi  : ${company.trim() || '(Independen / Stealth)'}
+
+2. KONFIGURASI RUANG LINGKUP & ESTIMASI
+   Disiplin Terpilih   : ${selectedServices.join(', ')}
+   Skala Eksplorasi    : ${complexity.toUpperCase()}
+   Kecepatan Lini Masa : ${timelineMode === 'accelerated' ? 'Dipercepat (Prioritas)' : 'Ritme Kuratorial Standar'}
+   Estimasi Durasi     : ~${estimatedWeeks} Minggu Kerja
+   Estimasi Investasi  : Rp ${estimatedBudgetIDR} Juta IDR
+
+3. RINCIAN DELIVERABLES UTAMA
+${deliverableLines}
+
+4. KURASI SHORTLIST KARYA REFERENSI (${shortlistedProjects.length} Karya)
+${shortlistLines}
+
+5. CATATAN KONTEKS PROYEK
+   ${notes.trim() || 'Tidak ada catatan tambahan.'}
+
+====================================================================
+Atelier Kinetik · Digital Monograph & Design Studio (Jakarta & Zurich)
+====================================================================
+`;
+
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `Atelier-Kinetik-Brief-${Date.now().toString().slice(-4)}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !email.trim() || !email.includes('@')) {
@@ -117,6 +190,7 @@ export const ScopeEstimator: React.FC<ScopeEstimatorProps> = ({
       return;
     }
     setErrorMessage(null);
+    soundEngine.playChime();
 
     const inquiry: SavedInquiry = {
       id: `INQ-${Date.now().toString().slice(-5)}`,
@@ -130,6 +204,7 @@ export const ScopeEstimator: React.FC<ScopeEstimatorProps> = ({
       estimatedBudgetIDR,
       notes: notes.trim(),
       referencedProjectTitle: referencedProject?.title,
+      shortlistedTitles: shortlistedProjects.map((p) => p.title),
       submittedAt: new Date().toLocaleDateString('id-ID', {
         day: 'numeric',
         month: 'long',
@@ -154,6 +229,7 @@ export const ScopeEstimator: React.FC<ScopeEstimatorProps> = ({
   };
 
   const handleReset = () => {
+    soundEngine.playTick();
     setSubmittedInquiry(null);
     setName('');
     setEmail('');
@@ -170,25 +246,79 @@ export const ScopeEstimator: React.FC<ScopeEstimatorProps> = ({
     >
       <div className="max-w-[1280px] mx-auto px-6 md:px-10">
         {/* Section Heading */}
-        <div className="max-w-2xl mb-12">
-          <div className="flex items-center gap-2 text-xs text-[#52525B] mb-3">
-            <span className="font-mono-num text-[#0A0A0C] font-semibold">
-              03. Estimasi Scope & Kolaborasi
-            </span>
-            <span aria-hidden="true">·</span>
-            <span>Transparansi Lini Masa & Investasi</span>
+        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-12">
+          <div className="max-w-2xl">
+            <div className="flex items-center gap-2 text-xs text-[#52525B] mb-3">
+              <span className="font-mono-num text-[#0A0A0C] font-semibold">
+                06. Estimasi Scope, Shortlist & Kolaborasi
+              </span>
+              <span aria-hidden="true">·</span>
+              <span>Transparansi Lini Masa & Ekspor Dokumen Brief</span>
+            </div>
+            <h2
+              id="scope-heading"
+              className="font-display text-3xl md:text-4xl lg:text-[42px] font-bold tracking-tight text-[#0A0A0C] leading-[1.12] [text-wrap:balance]"
+            >
+              Konfigurasi Ruang Lingkup Proyek & Mulai{' '}
+              <span className="font-editorial italic font-normal">
+                Dialog Kreatif
+              </span>
+            </h2>
           </div>
-          <h2
-            id="scope-heading"
-            className="font-display text-3xl md:text-4xl lg:text-[42px] font-bold tracking-tight text-[#0A0A0C] leading-[1.12] [text-wrap:balance]"
+
+          <button
+            type="button"
+            onClick={handleDownloadBriefDocument}
+            className="px-4 py-2.5 rounded-xl frosted-crystal hover:bg-[#0A0A0C] hover:text-white text-xs font-semibold text-[#0A0A0C] flex items-center gap-2 transition-colors self-start lg:self-end cursor-pointer whitespace-nowrap shrink-0"
           >
-            Konfigurasi Ruang Lingkup Proyek & Mulai <span className="font-editorial italic font-normal">Dialog Kreatif</span>
-          </h2>
+            <Download className="w-3.5 h-3.5 text-[#1D4ED8]" />
+            <span>Ekspor Ringkasan Brief & Shortlist (.TXT)</span>
+          </button>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* Left Column: Interactive Scope Configurator (7 Cols) */}
           <div className="lg:col-span-7 frosted-crystal rounded-2xl p-6 md:p-8 space-y-8">
+            {/* Shortlisted Projects Curated Box */}
+            {shortlistedProjects.length > 0 && (
+              <div className="p-4 rounded-xl bg-white/85 border border-[#0A0A0C]/12 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-xs font-semibold text-[#0A0A0C]">
+                    <Bookmark className="w-3.5 h-3.5 text-[#1D4ED8]" />
+                    <span>
+                      Shortlist Karya Referensi Pilihan Anda ({shortlistedProjects.length})
+                    </span>
+                  </div>
+                  <span className="text-[11px] text-[#52525B]">
+                    Tersertakan otomatis saat ekspor brief
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {shortlistedProjects.map((proj) => (
+                    <div
+                      key={proj.id}
+                      className="px-3 py-1.5 rounded-lg bg-[#F8F7F4] border border-[#0A0A0C]/10 flex items-center gap-2 text-xs"
+                    >
+                      <span className="font-mono-num font-bold text-[#1D4ED8]">
+                        {proj.index}
+                      </span>
+                      <span className="font-medium text-[#0A0A0C]">
+                        {proj.title}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => onRemoveShortlisted(proj.id)}
+                        aria-label={`Hapus ${proj.title} dari shortlist`}
+                        className="text-[#52525B] hover:text-[#0A0A0C] cursor-pointer"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Referenced Project Notice if active */}
             {referencedProject && (
               <div className="p-4 rounded-xl bg-[#1D4ED8]/[0.06] border border-[#1D4ED8]/25 flex items-center justify-between gap-4">
@@ -291,7 +421,10 @@ export const ScopeEstimator: React.FC<ScopeEstimatorProps> = ({
                     <button
                       key={item.key}
                       type="button"
-                      onClick={() => setComplexity(item.key)}
+                      onClick={() => {
+                        soundEngine.playTick();
+                        setComplexity(item.key);
+                      }}
                       className={`px-3.5 py-2.5 rounded-xl border text-left transition-colors cursor-pointer ${
                         complexity === item.key
                           ? 'bg-[#1D4ED8] text-white border-[#1D4ED8]'
@@ -320,7 +453,10 @@ export const ScopeEstimator: React.FC<ScopeEstimatorProps> = ({
                   <div className="flex flex-col gap-2">
                     <button
                       type="button"
-                      onClick={() => setTimelineMode('standard')}
+                      onClick={() => {
+                        soundEngine.playTick();
+                        setTimelineMode('standard');
+                      }}
                       className={`px-3.5 py-2.5 rounded-xl border text-left transition-colors cursor-pointer ${
                         timelineMode === 'standard'
                           ? 'bg-[#0A0A0C] text-white border-[#0A0A0C]'
@@ -343,7 +479,10 @@ export const ScopeEstimator: React.FC<ScopeEstimatorProps> = ({
 
                     <button
                       type="button"
-                      onClick={() => setTimelineMode('accelerated')}
+                      onClick={() => {
+                        soundEngine.playTick();
+                        setTimelineMode('accelerated');
+                      }}
                       className={`px-3.5 py-2.5 rounded-xl border text-left transition-colors cursor-pointer ${
                         timelineMode === 'accelerated'
                           ? 'bg-[#0A0A0C] text-white border-[#0A0A0C]'
@@ -351,7 +490,7 @@ export const ScopeEstimator: React.FC<ScopeEstimatorProps> = ({
                       }`}
                     >
                       <span className="block text-xs font-bold">
-                        urgen / Peluncuran Dipercepat
+                        Urgen / Peluncuran Dipercepat
                       </span>
                       <span
                         className={`block text-[11px] mt-0.5 ${
@@ -441,14 +580,25 @@ export const ScopeEstimator: React.FC<ScopeEstimatorProps> = ({
                   </div>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={handleReset}
-                  className="w-full py-2.5 px-4 rounded-xl border border-[#0A0A0C]/20 hover:bg-[#0A0A0C] hover:text-white text-xs font-semibold transition-colors flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  <RotateCcw className="w-3.5 h-3.5" />
-                  <span>Buat Simulasi Scope Baru</span>
-                </button>
+                <div className="flex flex-col gap-2">
+                  <button
+                    type="button"
+                    onClick={handleDownloadBriefDocument}
+                    className="w-full py-2.5 px-4 rounded-xl bg-[#0A0A0C] text-white hover:bg-[#1D4ED8] text-xs font-semibold transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    <span>Unduh Salinan Dokumen Brief (.TXT)</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleReset}
+                    className="w-full py-2.5 px-4 rounded-xl border border-[#0A0A0C]/20 hover:bg-[#0A0A0C] hover:text-white text-xs font-semibold transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    <span>Buat Simulasi Scope Baru</span>
+                  </button>
+                </div>
               </motion.div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-4" noValidate>

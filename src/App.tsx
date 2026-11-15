@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence, useScroll, useSpring } from 'motion/react';
 import {
   ArrowUpRight,
@@ -8,6 +8,11 @@ import {
   Compass,
   MoveRight,
   X,
+  Bookmark,
+  Command,
+  Presentation,
+  Volume2,
+  VolumeX,
 } from 'lucide-react';
 import {
   PORTFOLIO_CATEGORIES,
@@ -17,8 +22,17 @@ import {
 } from './data/portfolioData';
 import { KineticStage } from './components/KineticStage';
 import { BeforeAfterInspector } from './components/BeforeAfterInspector';
+import { AtelierLab } from './components/AtelierLab';
+import { RecognitionArchive } from './components/RecognitionArchive';
 import { CaseStudyModal } from './components/CaseStudyModal';
 import { ScopeEstimator } from './components/ScopeEstimator';
+import {
+  CommandPalette,
+  ClientPitchDeckModal,
+} from './components/StudioOverlays';
+import { soundEngine } from './utils/soundEngine';
+
+const SHORTLIST_STORAGE_KEY = 'atelier_kinetik_shortlist_v1';
 
 export default function App() {
   const [activeCategory, setActiveCategory] =
@@ -31,7 +45,68 @@ export default function App() {
   const [referencedProject, setReferencedProject] =
     useState<ProjectItem | null>(null);
   const [failedImages, setFailedImages] = useState<Record<string, boolean>>({});
-  const [fontPairing, setFontPairing] = useState<'geometric' | 'avant' | 'monograph'>('geometric');
+  const [fontPairing, setFontPairing] = useState<
+    'geometric' | 'avant' | 'monograph'
+  >('geometric');
+
+  // New Studio Features State
+  const [shortlistedIds, setShortlistedIds] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem(SHORTLIST_STORAGE_KEY);
+      return saved ? JSON.parse(saved) : ['nova-private-banking'];
+    } catch {
+      return ['nova-private-banking'];
+    }
+  });
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] =
+    useState<boolean>(false);
+  const [isPitchModeOpen, setIsPitchModeOpen] = useState<boolean>(false);
+  const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
+
+  // Sync shortlist to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        SHORTLIST_STORAGE_KEY,
+        JSON.stringify(shortlistedIds)
+      );
+    } catch {
+      // ignore storage errors
+    }
+  }, [shortlistedIds]);
+
+  // Global Cmd/Ctrl + K shortcut for Command Palette
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        soundEngine.playTick(1.1);
+        setIsCommandPaletteOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  const handleToggleSound = () => {
+    const next = !soundEnabled;
+    setSoundEnabled(next);
+    soundEngine.setEnabled(next);
+    if (next) soundEngine.playChime();
+  };
+
+  const handleToggleShortlist = (projectId: string) => {
+    setShortlistedIds((prev) =>
+      prev.includes(projectId)
+        ? prev.filter((id) => id !== projectId)
+        : [...prev, projectId]
+    );
+  };
+
+  const shortlistedProjects = useMemo(
+    () => PROJECTS.filter((p) => shortlistedIds.includes(p.id)),
+    [shortlistedIds]
+  );
 
   // Smooth scroll progress bar at top of viewport
   const { scrollYProgress } = useScroll();
@@ -91,6 +166,9 @@ export default function App() {
 
   const handleUseProjectAsReference = (project: ProjectItem) => {
     setReferencedProject(project);
+    if (!shortlistedIds.includes(project.id)) {
+      setShortlistedIds((prev) => [...prev, project.id]);
+    }
     const el = document.getElementById('kolaborasi');
     if (el) {
       el.scrollIntoView({ behavior: 'smooth' });
@@ -98,6 +176,7 @@ export default function App() {
   };
 
   const scrollToSection = (sectionId: string) => {
+    soundEngine.playTick();
     const el = document.getElementById(sectionId);
     if (el) {
       el.scrollIntoView({ behavior: 'smooth' });
@@ -112,7 +191,9 @@ export default function App() {
       : '';
 
   return (
-    <div className={`min-h-screen bg-[#F8F7F4] text-[#0A0A0C] relative ${fontThemeClass}`}>
+    <div
+      className={`min-h-screen bg-[#F8F7F4] text-[#0A0A0C] relative ${fontThemeClass}`}
+    >
       {/* Scroll Progress Hairline Indicator */}
       <motion.div
         style={{ scaleX }}
@@ -130,7 +211,7 @@ export default function App() {
             Atelier Kinetik
           </a>
 
-          {/* Zone 2: 4 Single-Line Navigation Links */}
+          {/* Zone 2: 5 Single-Line Navigation Links */}
           <nav
             aria-label="Navigasi utama"
             className="hidden md:flex items-center gap-7 text-sm font-medium text-[#52525B]"
@@ -145,13 +226,19 @@ export default function App() {
               href="#proses"
               className="hover:text-[#0A0A0C] transition-colors whitespace-nowrap shrink-0"
             >
-              Anatomi Proses
+              Before/After
             </a>
             <a
-              href="#filosofi"
+              href="#laboratorium"
               className="hover:text-[#0A0A0C] transition-colors whitespace-nowrap shrink-0"
             >
-              Filosofi Studio
+              Design Lab
+            </a>
+            <a
+              href="#rekognisi"
+              className="hover:text-[#0A0A0C] transition-colors whitespace-nowrap shrink-0"
+            >
+              Rekognisi
             </a>
             <a
               href="#kolaborasi"
@@ -176,8 +263,108 @@ export default function App() {
 
       <main>
         {/* HERO SECTION — Split-Screen Desktop Architecture */}
-        <section className="pt-10 md:pt-16 pb-16">
+        <section className="pt-8 md:pt-14 pb-16">
           <div className="max-w-[1280px] mx-auto px-6 md:px-10">
+            {/* Studio Interactive Utilities Toolbar (Below Header, Above Hero Split) */}
+            <div className="mb-8 pb-4 border-b border-[#0A0A0C]/10 flex flex-wrap items-center justify-between gap-4">
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    soundEngine.playTick(1.1);
+                    setIsCommandPaletteOpen(true);
+                  }}
+                  className="px-3 py-1.5 rounded-xl frosted-crystal hover:bg-[#0A0A0C] hover:text-white text-xs font-medium text-[#0A0A0C] flex items-center gap-2 transition-colors cursor-pointer whitespace-nowrap shrink-0"
+                >
+                  <Command className="w-3.5 h-3.5 text-[#1D4ED8]" />
+                  <span>Command Palette</span>
+                  <span className="font-mono-num text-[10px] opacity-70">
+                    ⌘K
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    soundEngine.playChime();
+                    setIsPitchModeOpen(true);
+                  }}
+                  className="px-3 py-1.5 rounded-xl frosted-crystal hover:bg-[#0A0A0C] hover:text-white text-xs font-medium text-[#0A0A0C] flex items-center gap-2 transition-colors cursor-pointer whitespace-nowrap shrink-0"
+                >
+                  <Presentation className="w-3.5 h-3.5 text-[#1D4ED8]" />
+                  <span>Mode Presentasi Klien</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleToggleSound}
+                  className="px-3 py-1.5 rounded-xl frosted-crystal hover:bg-[#0A0A0C] hover:text-white text-xs font-medium text-[#0A0A0C] flex items-center gap-2 transition-colors cursor-pointer whitespace-nowrap shrink-0"
+                >
+                  {soundEnabled ? (
+                    <Volume2 className="w-3.5 h-3.5 text-[#1D4ED8]" />
+                  ) : (
+                    <VolumeX className="w-3.5 h-3.5 text-[#52525B]" />
+                  )}
+                  <span>Audio Taktil: {soundEnabled ? 'Aktif' : 'Mati'}</span>
+                </button>
+              </div>
+
+              {/* Interactive Typography Pairing Selector */}
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-xs font-medium text-[#52525B]">
+                  Tipografi:
+                </span>
+                <div
+                  role="group"
+                  aria-label="Pilih pasangan tipografi portofolio"
+                  className="frosted-crystal p-1 rounded-xl inline-flex items-center gap-1"
+                >
+                  <button
+                    type="button"
+                    onClick={() => {
+                      soundEngine.playTick();
+                      setFontPairing('geometric');
+                    }}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
+                      fontPairing === 'geometric'
+                        ? 'bg-[#0A0A0C] text-white shadow-sm'
+                        : 'text-[#52525B] hover:text-[#0A0A0C]'
+                    }`}
+                  >
+                    Outfit + Playfair
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      soundEngine.playTick();
+                      setFontPairing('avant');
+                    }}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
+                      fontPairing === 'avant'
+                        ? 'bg-[#0A0A0C] text-white shadow-sm'
+                        : 'text-[#52525B] hover:text-[#0A0A0C]'
+                    }`}
+                  >
+                    Syne Avant-Garde
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      soundEngine.playTick();
+                      setFontPairing('monograph');
+                    }}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
+                      fontPairing === 'monograph'
+                        ? 'bg-[#0A0A0C] text-white shadow-sm'
+                        : 'text-[#52525B] hover:text-[#0A0A0C]'
+                    }`}
+                  >
+                    Playfair Monograph
+                  </button>
+                </div>
+              </div>
+            </div>
+
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-stretch">
               {/* Left Column: Typographic Hierarchy & Primary Anchor (7 Cols) */}
               <motion.div
@@ -214,55 +401,9 @@ export default function App() {
                     <span className="text-[#0A0A0C] font-medium">
                       frosted-crystal glassmorphism
                     </span>
-                    , serta interaksi berbasis scroll yang halus untuk merek dan
-                    produk digital ambisius.
+                    , laboratorium sistem desain interaktif, serta koreografi
+                    berbasis scroll yang halus.
                   </p>
-
-                  {/* Interactive Typography Pairing Selector */}
-                  <div className="mt-6 flex flex-wrap items-center gap-2.5">
-                    <span className="text-xs font-medium text-[#52525B]">
-                      Karakter Tipografi:
-                    </span>
-                    <div
-                      role="group"
-                      aria-label="Pilih pasangan tipografi portofolio"
-                      className="frosted-crystal p-1 rounded-xl inline-flex flex-wrap items-center gap-1"
-                    >
-                      <button
-                        type="button"
-                        onClick={() => setFontPairing('geometric')}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
-                          fontPairing === 'geometric'
-                            ? 'bg-[#0A0A0C] text-white shadow-sm'
-                            : 'text-[#52525B] hover:text-[#0A0A0C]'
-                        }`}
-                      >
-                        Outfit + Playfair
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setFontPairing('avant')}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
-                          fontPairing === 'avant'
-                            ? 'bg-[#0A0A0C] text-white shadow-sm'
-                            : 'text-[#52525B] hover:text-[#0A0A0C]'
-                        }`}
-                      >
-                        Syne Avant-Garde
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setFontPairing('monograph')}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
-                          fontPairing === 'monograph'
-                            ? 'bg-[#0A0A0C] text-white shadow-sm'
-                            : 'text-[#52525B] hover:text-[#0A0A0C]'
-                        }`}
-                      >
-                        Playfair Monograph
-                      </button>
-                    </div>
-                  </div>
                 </div>
 
                 {/* CTA Row & Discipline Index Preview */}
@@ -279,10 +420,10 @@ export default function App() {
 
                     <button
                       type="button"
-                      onClick={() => scrollToSection('proses')}
+                      onClick={() => scrollToSection('laboratorium')}
                       className="px-5 py-3.5 rounded-xl frosted-crystal hover:bg-white text-[#0A0A0C] text-xs md:text-sm font-semibold transition-colors whitespace-nowrap shrink-0 cursor-pointer"
                     >
-                      Inspeksi Before / After
+                      Uji Token & Motion Lab
                     </button>
                   </div>
 
@@ -299,7 +440,11 @@ export default function App() {
               <motion.div
                 initial={{ opacity: 0, scale: 0.98 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.5, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
+                transition={{
+                  duration: 0.5,
+                  delay: 0.08,
+                  ease: [0.16, 1, 0.3, 1],
+                }}
                 className="lg:col-span-5 flex"
               >
                 <KineticStage
@@ -440,7 +585,10 @@ export default function App() {
                 >
                   <button
                     type="button"
-                    onClick={() => setGalleryView('bento')}
+                    onClick={() => {
+                      soundEngine.playTick();
+                      setGalleryView('bento');
+                    }}
                     className={`px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
                       galleryView === 'bento'
                         ? 'bg-[#0A0A0C] text-white'
@@ -452,7 +600,10 @@ export default function App() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => setGalleryView('index')}
+                    onClick={() => {
+                      soundEngine.playTick();
+                      setGalleryView('index');
+                    }}
                     className={`px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
                       galleryView === 'index'
                         ? 'bg-[#0A0A0C] text-white'
@@ -480,7 +631,10 @@ export default function App() {
                     role="tab"
                     aria-selected={isActive}
                     type="button"
-                    onClick={() => setActiveCategory(category)}
+                    onClick={() => {
+                      soundEngine.playTick();
+                      setActiveCategory(category);
+                    }}
                     className={`px-4 py-2.5 rounded-xl text-xs font-semibold transition-all whitespace-nowrap shrink-0 flex items-center gap-2 cursor-pointer ${
                       isActive
                         ? 'bg-[#0A0A0C] text-white shadow-sm'
@@ -514,6 +668,7 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => {
+                    soundEngine.playTick();
                     setActiveCategory('Semua');
                     setSearchQuery('');
                   }}
@@ -534,6 +689,7 @@ export default function App() {
                       project.bentoSpan === 'featured' &&
                       activeCategory === 'Semua' &&
                       !searchQuery;
+                    const isShortlisted = shortlistedIds.includes(project.id);
 
                     return (
                       <motion.article
@@ -548,7 +704,10 @@ export default function App() {
                           delay: idx * 0.04,
                           ease: [0.16, 1, 0.3, 1],
                         }}
-                        onClick={() => setSelectedProject(project)}
+                        onClick={() => {
+                          soundEngine.playTick(1.1);
+                          setSelectedProject(project);
+                        }}
                         className={`group rounded-2xl overflow-hidden frosted-crystal flex flex-col justify-between cursor-pointer transition-transform duration-200 hover:-translate-y-1 ${
                           isWide ? 'md:col-span-2' : 'col-span-1'
                         }`}
@@ -580,9 +739,32 @@ export default function App() {
                             </div>
                           )}
 
-                          {/* Subtle Top-Right Action Affordance on Hover */}
-                          <div className="absolute top-4 right-4 w-10 h-10 rounded-xl frosted-crystal flex items-center justify-center text-[#0A0A0C] group-hover:bg-[#0A0A0C] group-hover:text-white transition-colors">
-                            <ArrowUpRight className="w-4 h-4" />
+                          {/* Top-Right Shortlist & Open Affordance Buttons */}
+                          <div className="absolute top-4 right-4 flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                soundEngine.playChime();
+                                handleToggleShortlist(project.id);
+                              }}
+                              aria-label={
+                                isShortlisted
+                                  ? 'Hapus dari shortlist'
+                                  : 'Simpan ke shortlist'
+                              }
+                              className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors cursor-pointer ${
+                                isShortlisted
+                                  ? 'bg-[#1D4ED8] text-white shadow-md'
+                                  : 'frosted-crystal text-[#0A0A0C] hover:bg-[#0A0A0C] hover:text-white'
+                              }`}
+                            >
+                              <Bookmark className="w-4 h-4" />
+                            </button>
+
+                            <div className="w-10 h-10 rounded-xl frosted-crystal flex items-center justify-center text-[#0A0A0C] group-hover:bg-[#0A0A0C] group-hover:text-white transition-colors">
+                              <ArrowUpRight className="w-4 h-4" />
+                            </div>
                           </div>
 
                           {/* Bottom Frosted Impact Strip over Media */}
@@ -614,7 +796,9 @@ export default function App() {
                                 </React.Fragment>
                               ))}
                               <span aria-hidden="true">·</span>
-                              <span className="font-mono-num">{project.year}</span>
+                              <span className="font-mono-num">
+                                {project.year}
+                              </span>
                             </div>
 
                             <h3 className="font-display text-xl md:text-2xl font-bold text-[#0A0A0C] mt-2 group-hover:text-[#1D4ED8] transition-colors">
@@ -639,42 +823,64 @@ export default function App() {
             ) : (
               /* EDITORIAL MONOGRAPH INDEX VIEW */
               <div className="frosted-crystal rounded-2xl divide-y divide-[#0A0A0C]/10 overflow-hidden">
-                {filteredProjects.map((project) => (
-                  <div
-                    key={project.id}
-                    onClick={() => setSelectedProject(project)}
-                    className="p-5 md:p-6 hover:bg-white/80 transition-colors flex flex-col md:flex-row md:items-center justify-between gap-4 cursor-pointer group"
-                  >
-                    <div className="flex items-start md:items-center gap-4 md:gap-6">
-                      <span className="font-mono-num text-sm font-bold text-[#52525B] group-hover:text-[#1D4ED8]">
-                        {project.index}
-                      </span>
-                      <div>
-                        <h3 className="font-display text-lg md:text-xl font-bold text-[#0A0A0C] group-hover:text-[#1D4ED8] transition-colors">
-                          {project.title}
-                        </h3>
-                        <div className="flex flex-wrap items-center gap-2 text-xs text-[#52525B] mt-1">
-                          <span>{project.client}</span>
-                          <span aria-hidden="true">·</span>
-                          <span className="text-[#0A0A0C] font-medium">
-                            {project.category}
-                          </span>
-                          <span aria-hidden="true">·</span>
-                          <span className="font-mono-num">{project.year}</span>
+                {filteredProjects.map((project) => {
+                  const isShortlisted = shortlistedIds.includes(project.id);
+                  return (
+                    <div
+                      key={project.id}
+                      onClick={() => {
+                        soundEngine.playTick(1.1);
+                        setSelectedProject(project);
+                      }}
+                      className="p-5 md:p-6 hover:bg-white/80 transition-colors flex flex-col md:flex-row md:items-center justify-between gap-4 cursor-pointer group"
+                    >
+                      <div className="flex items-start md:items-center gap-4 md:gap-6">
+                        <span className="font-mono-num text-sm font-bold text-[#52525B] group-hover:text-[#1D4ED8]">
+                          {project.index}
+                        </span>
+                        <div>
+                          <h3 className="font-display text-lg md:text-xl font-bold text-[#0A0A0C] group-hover:text-[#1D4ED8] transition-colors">
+                            {project.title}
+                          </h3>
+                          <div className="flex flex-wrap items-center gap-2 text-xs text-[#52525B] mt-1">
+                            <span>{project.client}</span>
+                            <span aria-hidden="true">·</span>
+                            <span className="text-[#0A0A0C] font-medium">
+                              {project.category}
+                            </span>
+                            <span aria-hidden="true">·</span>
+                            <span className="font-mono-num">{project.year}</span>
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    <div className="flex items-center justify-between md:justify-end gap-6">
-                      <span className="font-mono-num text-xs font-semibold text-[#0A0A0C]">
-                        {project.impactMetric}
-                      </span>
-                      <span className="w-9 h-9 rounded-xl bg-[#0A0A0C]/5 group-hover:bg-[#0A0A0C] group-hover:text-white flex items-center justify-center transition-colors">
-                        <ArrowUpRight className="w-4 h-4" />
-                      </span>
+                      <div className="flex items-center justify-between md:justify-end gap-3">
+                        <span className="font-mono-num text-xs font-semibold text-[#0A0A0C] mr-2">
+                          {project.impactMetric}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            soundEngine.playChime();
+                            handleToggleShortlist(project.id);
+                          }}
+                          aria-label="Simpan ke shortlist"
+                          className={`w-9 h-9 rounded-xl flex items-center justify-center transition-colors cursor-pointer ${
+                            isShortlisted
+                              ? 'bg-[#1D4ED8] text-white'
+                              : 'bg-[#0A0A0C]/5 text-[#0A0A0C] hover:bg-[#0A0A0C] hover:text-white'
+                          }`}
+                        >
+                          <Bookmark className="w-4 h-4" />
+                        </button>
+                        <span className="w-9 h-9 rounded-xl bg-[#0A0A0C]/5 group-hover:bg-[#0A0A0C] group-hover:text-white flex items-center justify-center transition-colors">
+                          <ArrowUpRight className="w-4 h-4" />
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
@@ -683,7 +889,10 @@ export default function App() {
         {/* SECTION 02: INTERACTIVE BEFORE/AFTER DESIGN CRAFT INSPECTOR */}
         <BeforeAfterInspector />
 
-        {/* SECTION 03: STUDIO PHILOSOPHY & ATTRIBUTABLE CLIENT PROOF */}
+        {/* SECTION 03: ATELIER DESIGN SYSTEM & MOTION PHYSICS LAB */}
+        <AtelierLab />
+
+        {/* SECTION 04: STUDIO PHILOSOPHY & ATTRIBUTABLE CLIENT PROOF */}
         <section
           id="filosofi"
           className="py-20 md:py-28 border-t border-[#0A0A0C]/10"
@@ -695,7 +904,7 @@ export default function App() {
               <div className="lg:col-span-5">
                 <div className="flex items-center gap-2 text-xs text-[#52525B] mb-3">
                   <span className="font-mono-num text-[#0A0A0C] font-semibold">
-                    03. Filosofi & Prinsip Kerja
+                    04. Filosofi & Prinsip Kerja
                   </span>
                   <span aria-hidden="true">·</span>
                   <span>Disiplin Anti-Ornamen</span>
@@ -775,7 +984,10 @@ export default function App() {
                       <strong className="text-[#0A0A0C] font-semibold">
                         Lukas Vance
                       </strong>
-                      <span aria-hidden="true" className="mx-1.5 text-[#52525B]">
+                      <span
+                        aria-hidden="true"
+                        className="mx-1.5 text-[#52525B]"
+                      >
                         ·
                       </span>
                       <span className="text-[#52525B]">
@@ -792,12 +1004,44 @@ export default function App() {
           </div>
         </section>
 
-        {/* SECTION 04: INTERACTIVE SCOPE ESTIMATOR & COLLABORATION BRIEF */}
+        {/* SECTION 05: AWARDS, RECOGNITION & EDITORIAL PRESS ARCHIVE */}
+        <RecognitionArchive onSelectProjectById={handleSelectProjectById} />
+
+        {/* SECTION 06: INTERACTIVE SCOPE ESTIMATOR, SHORTLIST & COLLABORATION BRIEF */}
         <ScopeEstimator
           referencedProject={referencedProject}
           onClearReference={() => setReferencedProject(null)}
+          shortlistedProjects={shortlistedProjects}
+          onRemoveShortlisted={handleToggleShortlist}
         />
       </main>
+
+      {/* Floating Shortlist Quick Bar when user has curated projects */}
+      <AnimatePresence>
+        {shortlistedProjects.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 24 }}
+            className="fixed bottom-5 right-5 z-30 frosted-crystal rounded-2xl p-2.5 shadow-xl flex items-center gap-3 border border-white"
+          >
+            <div className="flex items-center gap-2 pl-2 text-xs">
+              <Bookmark className="w-3.5 h-3.5 text-[#1D4ED8]" />
+              <span className="font-semibold text-[#0A0A0C] whitespace-nowrap">
+                {shortlistedProjects.length} Karya di Shortlist
+              </span>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => scrollToSection('kolaborasi')}
+              className="px-3.5 py-2 rounded-xl bg-[#0A0A0C] hover:bg-[#1D4ED8] text-white text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap shrink-0"
+            >
+              Ekspor Brief
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Minimalist Architectural Footer */}
       <footer className="border-t border-[#0A0A0C]/10 bg-white/60 py-12">
@@ -816,14 +1060,23 @@ export default function App() {
             <a href="#karya" className="hover:text-[#0A0A0C] transition-colors">
               Karya
             </a>
-            <a href="#proses" className="hover:text-[#0A0A0C] transition-colors">
+            <a
+              href="#proses"
+              className="hover:text-[#0A0A0C] transition-colors"
+            >
               Before/After
             </a>
             <a
-              href="#filosofi"
+              href="#laboratorium"
               className="hover:text-[#0A0A0C] transition-colors"
             >
-              Filosofi
+              Design Lab
+            </a>
+            <a
+              href="#rekognisi"
+              className="hover:text-[#0A0A0C] transition-colors"
+            >
+              Rekognisi
             </a>
             <a
               href="#kolaborasi"
@@ -843,6 +1096,30 @@ export default function App() {
         onSelectProject={(proj) => setSelectedProject(proj)}
         allProjects={PROJECTS}
         onUseProjectAsReference={handleUseProjectAsReference}
+        shortlistedIds={shortlistedIds}
+        onToggleShortlist={handleToggleShortlist}
+      />
+
+      {/* Command Palette (Cmd/Ctrl + K) */}
+      <CommandPalette
+        isOpen={isCommandPaletteOpen}
+        onClose={() => setIsCommandPaletteOpen(false)}
+        projects={PROJECTS}
+        onSelectProject={(proj) => setSelectedProject(proj)}
+        onSelectCategory={(cat) => setActiveCategory(cat)}
+        onChangeFontPairing={(pairing) => setFontPairing(pairing)}
+        onOpenPitchMode={() => setIsPitchModeOpen(true)}
+        soundEnabled={soundEnabled}
+        onToggleSound={handleToggleSound}
+      />
+
+      {/* Fullscreen Client Pitch Deck Mode */}
+      <ClientPitchDeckModal
+        isOpen={isPitchModeOpen}
+        onClose={() => setIsPitchModeOpen(false)}
+        projects={PROJECTS}
+        shortlistedIds={shortlistedIds}
+        onToggleShortlist={handleToggleShortlist}
       />
     </div>
   );
