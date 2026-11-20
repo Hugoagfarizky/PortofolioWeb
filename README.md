@@ -37,12 +37,12 @@ npm run lint     # tsc --noEmit
 ```
 index.html
 src/
-â”œâ”€â”€ App.tsx                  susunan halaman
-â”œâ”€â”€ components/              bagian UI (bento, modal, timeline, estimator)
-â”œâ”€â”€ data/portfolioData.ts    isi karya, kategori, dan studi kasus
-â”œâ”€â”€ assets/images/           gambar karya
-â”œâ”€â”€ utils/soundEngine.ts     umpan balik audio
-â””â”€â”€ index.css                token desain dan animasi
+├── App.tsx                  susunan halaman
+├── components/              bagian UI (bento, modal, timeline, estimator)
+├── data/portfolioData.ts    isi karya, kategori, dan studi kasus
+├── assets/images/           gambar karya
+├── utils/soundEngine.ts     umpan balik audio
+└── index.css                token desain dan animasi
 metadata.json                judul dan deskripsi aplikasi
 ```
 
