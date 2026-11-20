@@ -1,3 +1,6 @@
+// Base path Vite (mis. /PortofolioWeb/ di GitHub Pages), dipakai agar aset gambar tetap ketemu.
+const ASSET_BASE = import.meta.env.BASE_URL;
+
 export type ProjectCategory =
   | 'Semua'
   | 'UI/UX'
@@ -75,7 +78,7 @@ export const PROJECTS: ProjectItem[] = [
     category: 'UI/UX',
     secondaryCategories: ['Web Design', 'Motion Design'],
     bentoSpan: 'featured',
-    image: '/src/assets/images/portfolio_uiux_fintech_1794464324429.jpg',
+    image: `${ASSET_BASE}src/assets/images/portfolio_uiux_fintech_1794464324429.jpg`,
     impactMetric: '+64% Kecepatan Eksekusi Portofolio',
     impactDetail: 'Waktu penyelesaian transaksi valuta asing turun dari 4,2 menit menjadi 88 detik pada 120.000 nasabah prioritas.',
     duration: '14 Minggu',
@@ -116,7 +119,7 @@ export const PROJECTS: ProjectItem[] = [
     category: 'Brand Identity',
     secondaryCategories: ['Desain Grafis', 'Editorial'],
     bentoSpan: 'standard',
-    image: '/src/assets/images/portfolio_brand_packaging_1794464326613.jpg',
+    image: `${ASSET_BASE}src/assets/images/portfolio_brand_packaging_1794464326613.jpg`,
     impactMetric: '+210% Penjualan Edisi Kolektor',
     impactDetail: 'Seluruh 15.000 unit rilis perdana terjual habis di 8 butik flagship Eropa dalam 19 hari.',
     duration: '10 Minggu',
@@ -157,7 +160,7 @@ export const PROJECTS: ProjectItem[] = [
     category: 'Motion Design',
     secondaryCategories: ['3D Visual', 'Web Design'],
     bentoSpan: 'standard',
-    image: '/src/assets/images/portfolio_motion_3d_1794464327849.jpg',
+    image: `${ASSET_BASE}src/assets/images/portfolio_motion_3d_1794464327849.jpg`,
     impactMetric: '4,8 Menit Rata-Rata Durasi Sesi',
     impactDetail: 'Meningkatkan retensi pengunjung pada halaman peluncuran produk sebesar 185% dibanding halaman statis.',
     duration: '8 Minggu',
@@ -198,7 +201,7 @@ export const PROJECTS: ProjectItem[] = [
     category: 'Editorial',
     secondaryCategories: ['Desain Grafis'],
     bentoSpan: 'standard',
-    image: '/src/assets/images/portfolio_editorial_book_1794464329629.jpg',
+    image: `${ASSET_BASE}src/assets/images/portfolio_editorial_book_1794464329629.jpg`,
     impactMetric: '3 Edisi Cetak Ulang Internasional',
     impactDetail: 'Didistribusikan ke 45 museum seni dan toko buku arsitektur kuratorial di Zurich, Tokyo, dan London.',
     duration: '12 Minggu',
@@ -239,7 +242,7 @@ export const PROJECTS: ProjectItem[] = [
     category: 'Web Design',
     secondaryCategories: ['UI/UX', 'Motion Design'],
     bentoSpan: 'standard',
-    image: '/src/assets/images/portfolio_web_architecture_1794464329753.jpg',
+    image: `${ASSET_BASE}src/assets/images/portfolio_web_architecture_1794464329753.jpg`,
     impactMetric: '+142% Eksplorasi Katalog Pameran',
     impactDetail: 'Pengunjung menjelajahi rata-rata 9,4 bangunan per kunjungan disertai peningkatan pemesanan tiket 58%.',
     duration: '9 Minggu',
@@ -280,7 +283,7 @@ export const PROJECTS: ProjectItem[] = [
     category: '3D Visual',
     secondaryCategories: ['Motion Design', 'Brand Identity'],
     bentoSpan: 'standard',
-    image: '/src/assets/images/portfolio_motion_3d_1794464327849.jpg',
+    image: `${ASSET_BASE}src/assets/images/portfolio_motion_3d_1794464327849.jpg`,
     impactMetric: '60% Pengurangan Prototipe Fisik',
     impactDetail: 'Memungkinkan tim rekayasa menyetujui 28 varian penyelesaian permukaan secara digital sebelum pencetakan cetakan baja.',
     duration: '7 Minggu',
@@ -321,7 +324,7 @@ export const PROJECTS: ProjectItem[] = [
     category: 'Desain Grafis',
     secondaryCategories: ['Editorial', 'Motion Design'],
     bentoSpan: 'featured',
-    image: '/src/assets/images/portfolio_editorial_book_1794464329629.jpg',
+    image: `${ASSET_BASE}src/assets/images/portfolio_editorial_book_1794464329629.jpg`,
     impactMetric: '84.000+ Pengunjung Pameran Utama',
     impactDetail: 'Sistem identitas diterapkan secara kohesif pada 120 titik papan penunjuk arah, layar kinetik LED, dan katalog pameran.',
     duration: '11 Minggu',
@@ -367,7 +370,7 @@ export const TRANSFORMATION_STUDIES: TransformationStudy[] = [
     metricBadge: '-62% Beban Kognitif Visual',
     beforeLabel: 'Tahap 01 · Wireframe Arsitektur & Grid',
     afterLabel: 'Tahap 02 · Eksekusi UI Frosted-Crystal',
-    afterImage: '/src/assets/images/portfolio_uiux_fintech_1794464324429.jpg',
+    afterImage: `${ASSET_BASE}src/assets/images/portfolio_uiux_fintech_1794464324429.jpg`,
     wireframeMode: 'fintech-ui',
     technicalNotes: [
       'Pengurangan titik fokus dari 9 panel setara menjadi 1 jangkar visual dominan (Total Assets & Kurva Performa).',
@@ -387,7 +390,7 @@ export const TRANSFORMATION_STUDIES: TransformationStudy[] = [
     metricBadge: '100% Material Kertas Kapas Bebas Plastik',
     beforeLabel: 'Tahap 01 · Konstruksi Grid & Relief Glif',
     afterLabel: 'Tahap 02 · Fotografi Studio Produksi Akhir',
-    afterImage: '/src/assets/images/portfolio_brand_packaging_1794464326613.jpg',
+    afterImage: `${ASSET_BASE}src/assets/images/portfolio_brand_packaging_1794464326613.jpg`,
     wireframeMode: 'brand-monograph',
     technicalNotes: [
       'Kedalaman emboss 0.6mm dihitung agar memantulkan bayangan miring alami di bawah lampu galeri.',
@@ -407,7 +410,7 @@ export const TRANSFORMATION_STUDIES: TransformationStudy[] = [
     metricBadge: '60fps Koreografi Scroll Real-Time',
     beforeLabel: 'Tahap 01 · Lintasan Vektor & Wireframe 3D',
     afterLabel: 'Tahap 02 · Final Octane Caustics Render',
-    afterImage: '/src/assets/images/portfolio_motion_3d_1794464327849.jpg',
+    afterImage: `${ASSET_BASE}src/assets/images/portfolio_motion_3d_1794464327849.jpg`,
     wireframeMode: 'optical-3d',
     technicalNotes: [
       'Setiap lensa diorientasikan pada sumbu isometrik 35,26° untuk menciptakan kedalaman berlapis saat digulir.',

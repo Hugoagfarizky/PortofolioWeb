@@ -49,7 +49,7 @@ export const KineticStage: React.FC<KineticStageProps> = ({
       >
         {!imageError ? (
           <img
-            src="/src/assets/images/portfolio_motion_3d_1794464327849.jpg"
+            src={`${import.meta.env.BASE_URL}src/assets/images/portfolio_motion_3d_1794464327849.jpg`}
             alt="Simulasi optik kaca kristal dan cincin aluminium anodisa"
             referrerPolicy="no-referrer"
             onError={() => setImageError(true)}
